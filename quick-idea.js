@@ -1,29 +1,100 @@
 (() => {
-  const key = 'personal-project-board-v1';
-  const button = document.createElement('button');
-  button.id = 'quick-idea-trigger';
-  button.type = 'button';
-  button.textContent = '＋ 记个想法';
-  const layer = document.createElement('div');
-  layer.className = 'quick-idea-layer';
-  layer.innerHTML = `<section class="quick-idea-sheet" role="dialog" aria-modal="true" aria-labelledby="quickIdeaTitle"><h2 id="quickIdeaTitle">记个想法</h2><p>一句话就够了，先记下，不用整理。</p><textarea autofocus placeholder="比如：给 CRM 增加老顾客生日提醒"></textarea><div class="quick-idea-actions"><button type="button" class="cancel">取消</button><button type="button" class="save">保存想法</button></div></section>`;
-  document.body.append(button, layer);
-  const input = layer.querySelector('textarea');
-  const close = () => { layer.classList.remove('open'); input.value = ''; };
-  button.onclick = () => { layer.classList.add('open'); setTimeout(() => input.focus(), 0); };
-  layer.onclick = event => { if (event.target === layer) close(); };
-  layer.querySelector('.cancel').onclick = close;
-  layer.querySelector('.save').onclick = () => {
+  const storageKey = 'personal-project-board-v1';
+  const root = document.createElement('section');
+  root.className = 'idea-inbox';
+  root.setAttribute('aria-labelledby', 'ideaInboxTitle');
+  root.innerHTML = `
+    <div class="idea-inbox-head">
+      <h2 id="ideaInboxTitle">灵感收件箱</h2>
+      <span class="idea-count"></span>
+    </div>
+    <form class="idea-capture">
+      <textarea aria-label="输入灵感" placeholder="想到什么就写什么……"></textarea>
+      <button type="submit">记下来</button>
+    </form>
+    <div class="idea-items" aria-live="polite"></div>`;
+
+  const header = document.querySelector('.top');
+  if (header) header.after(root);
+  else document.querySelector('main')?.prepend(root);
+
+  const form = root.querySelector('form');
+  const input = root.querySelector('textarea');
+  const items = root.querySelector('.idea-items');
+  const count = root.querySelector('.idea-count');
+
+  function readData() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey));
+      return saved && typeof saved === 'object' ? saved : { projects: [], ideas: [] };
+    } catch {
+      return { projects: [], ideas: [] };
+    }
+  }
+
+  function writeData(data) {
+    localStorage.setItem(storageKey, JSON.stringify(data));
+  }
+
+  function escapeText(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+  }
+
+  function formatTime(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('zh-CN', {
+      month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    }).format(date);
+  }
+
+  function render() {
+    const data = readData();
+    data.ideas = Array.isArray(data.ideas) ? data.ideas : [];
+    count.textContent = `${data.ideas.length} 条`;
+    if (!data.ideas.length) {
+      items.innerHTML = '<div class="idea-empty">还没有灵感。想到什么，先记下来。</div>';
+      return;
+    }
+    items.innerHTML = data.ideas.map(idea => `
+      <article class="idea-row">
+        <div>
+          <p class="idea-text">${escapeText(idea.text || '')}</p>
+          <div class="idea-meta">${formatTime(idea.createdAt)}</div>
+        </div>
+        <button class="idea-delete" type="button" data-id="${escapeText(idea.id)}" aria-label="删除这条灵感">删除</button>
+      </article>`).join('');
+  }
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
     const text = input.value.trim();
     if (!text) return input.focus();
-    let data;
-    try { data = JSON.parse(localStorage.getItem(key)) || { projects: [], ideas: [] }; } catch { data = { projects: [], ideas: [] }; }
+    const data = readData();
     data.ideas = Array.isArray(data.ideas) ? data.ideas : [];
-    data.ideas.unshift({ id: crypto.randomUUID(), text, status: '待判断', createdAt: new Date().toISOString() });
-    localStorage.setItem(key, JSON.stringify(data));
-    close();
-    button.textContent = '已记下 ✓';
-    setTimeout(() => { button.textContent = '＋ 记个想法'; }, 1600);
-  };
-  input.onkeydown = event => { if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') layer.querySelector('.save').click(); };
+    data.ideas.unshift({
+      id: crypto.randomUUID(), text, status: '待判断', createdAt: new Date().toISOString()
+    });
+    writeData(data);
+    input.value = '';
+    render();
+    input.focus();
+  });
+
+  input.addEventListener('keydown', event => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') form.requestSubmit();
+  });
+
+  items.addEventListener('click', event => {
+    const button = event.target.closest('.idea-delete');
+    if (!button) return;
+    const data = readData();
+    data.ideas = (data.ideas || []).filter(idea => idea.id !== button.dataset.id);
+    writeData(data);
+    render();
+  });
+
+  render();
 })();

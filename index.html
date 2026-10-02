@@ -7,7 +7,7 @@
   <title>我的项目看板</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111827'/%3E%3Cpath d='M18 43V23h7v14h20v6H18zm13-10V18h7v15h-7zm13 0V25h7v8h-7z' fill='%237cfaad'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
-  <style>[hidden]{display:none!important}.project-note{margin:0 0 12px;color:#718095;font-size:.85rem;white-space:pre-wrap;overflow-wrap:anywhere}</style>
+  <style>[hidden]{display:none!important}.project-note{margin:0 0 12px;color:#718095;font-size:.85rem;white-space:pre-wrap;overflow-wrap:anywhere}.sheet select{width:100%;border:1px solid #dce3ea;border-radius:10px;padding:11px 12px;color:#182233;background:#fff}.project-card .status{display:inline-block;margin-top:10px;padding:5px 9px;border-radius:8px;background:#eef7f1;color:#2a7750;font-size:.82rem;font-weight:650}</style>
 </head>
 <body>
   <main class="app">
@@ -29,13 +29,13 @@
   <div id="sheetBackdrop" class="backdrop" hidden>
     <section id="entrySheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <div class="sheet-heading"><h2 id="sheetTitle">添加内容</h2><button id="closeSheet" type="button" aria-label="关闭">×</button></div>
-      <div id="entryChoice" class="entry-choice"><button id="chooseIdea" type="button">记一个灵感<span>想到什么，先放进来</span></button><button id="chooseProject" type="button">添加项目<span>写下当前进度和下一步</span></button></div>
+      <div id="entryChoice" class="entry-choice"><button id="chooseIdea" type="button">记一个灵感<span>想到什么，先放进来</span></button><button id="chooseProject" type="button">添加项目<span>写下目前阶段和下一步</span></button></div>
       <form id="ideaForm" hidden><label for="ideaText">你的想法</label><textarea id="ideaText" required placeholder="一句话就可以……"></textarea><div class="form-actions"><button class="back" type="button" data-back>返回</button><button class="save" type="submit">保存灵感</button></div></form>
       <form id="projectForm" hidden>
         <input id="projectId" type="hidden">
         <label for="projectName">项目名称</label><input id="projectName" required placeholder="例如：剧本杀顾客 CRM">
         <label for="projectNext">下一步做什么</label><input id="projectNext" placeholder="写一个可以马上开始的动作">
-        <div class="form-pair"><div><label for="projectProgress">进度 %</label><input id="projectProgress" type="number" min="0" max="100" value="0"></div><div><label for="projectDeadline">目标日期</label><input id="projectDeadline" type="date"></div></div>
+        <div class="form-pair"><div><label for="projectStage">目前阶段</label><select id="projectStage"><option>想法中</option><option>准备中</option><option>进行中</option><option>待上线</option><option>已完成</option><option>已暂停</option></select></div><div><label for="projectDeadline">目标日期</label><input id="projectDeadline" type="date"></div></div>
         <label for="projectNote">补充说明（可选）</label><textarea id="projectNote" placeholder="当前遇到什么问题、已经做了什么"></textarea>
         <div class="form-actions"><button class="back" type="button" data-back>返回</button><button class="save" type="submit">保存项目</button></div>
       </form>

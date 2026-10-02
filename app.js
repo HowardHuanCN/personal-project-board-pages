@@ -47,12 +47,10 @@ function render() {
   $('#ideaCount').textContent = `${state.ideas.length} 条`;
 
   $('#projects').innerHTML = state.projects.length ? state.projects.map(project => {
-    const progress = Math.max(0, Math.min(100, Number(project.progress) || 0));
     const due = dueLabel(project.deadline);
+    const stage = project.status === '规划中' ? '准备中' : (project.status || '进行中');
     return `<article class="project-card">
-      <div><h3>${safe(project.emoji ? `${project.emoji} ` : '')}${safe(project.name)}</h3><span class="status">${safe(project.status || '进行中')}</span></div>
-      <div class="progress-track"><span style="width:${progress}%"></span></div>
-      <div class="progress-meta"><span>当前进度</span><span>${progress}%</span></div>
+      <div><h3>${safe(project.emoji ? `${project.emoji} ` : '')}${safe(project.name)}</h3><span class="status">${safe(stage)}</span></div>
       <p class="project-next"><strong>下一步</strong>${safe(project.next || '还没写下一步')}</p>
       ${project.note ? `<p class="project-note">${safe(project.note)}</p>` : ''}
       <div class="project-foot"><span class="${(daysUntil(project.deadline) ?? 1) < 0 ? 'late' : ''}">${safe(due)}</span><button type="button" data-edit-project="${safe(project.id)}">更新</button></div>
@@ -101,7 +99,7 @@ function openSheet(kind = 'choice', project = null) {
     $('#projectId').value = project?.id || '';
     $('#projectName').value = project?.name || '';
     $('#projectNext').value = project?.next || '';
-    $('#projectProgress').value = project?.progress ?? 0;
+    $('#projectStage').value = project?.status === '规划中' ? '准备中' : (project?.status || '想法中');
     $('#projectDeadline').value = project?.deadline || '';
     $('#projectNote').value = project?.note || '';
     $('#sheetTitle').textContent = project ? '更新项目' : '添加项目';
@@ -153,13 +151,13 @@ $('#projectForm').addEventListener('submit', event => {
   const fields = {
     name: $('#projectName').value.trim(),
     next: $('#projectNext').value.trim(),
-    progress: Math.max(0, Math.min(100, Number($('#projectProgress').value) || 0)),
+    status: $('#projectStage').value,
     deadline: $('#projectDeadline').value,
     note: $('#projectNote').value.trim()
   };
   if (!fields.name) return;
   if (existing) Object.assign(existing, fields);
-  else state.projects.unshift({ id: crypto.randomUUID(), emoji: '✦', status: '进行中', milestones: [], ...fields });
+  else state.projects.unshift({ id: crypto.randomUUID(), emoji: '✦', milestones: [], ...fields });
   persist();
   closeSheet();
   toast(existing ? '项目已更新' : '项目已添加');
